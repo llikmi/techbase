@@ -712,9 +712,10 @@ html, body {
 .stat-icon.accent-blue { color: var(--accent); }
 
 .stat-value {
-  font-family: 'Syne', sans-serif;
-  font-size: 48px; font-weight: 1000;
+  font-family: 'Oswald', sans-serif;
+  font-size: 42px; font-weight: 700;
   line-height: 1; margin-bottom: 6px;
+  letter-spacing: -1px;
 }
 
 .stat-label {
