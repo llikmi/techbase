@@ -482,7 +482,7 @@ async function saveProduct() {
   }
 
   btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-floppy-fill me-2"></i><span id="saveBtnText">' + (editingId ? 'Сохранить изменения' : 'Сохранить товар') + '</span>';
+  btn.innerHTML = '<i class="bi bi-floppy-fill me-2"></i><span>' + (editingId ? 'Сохранить изменения' : 'Сохранить товар') + '</span>';
 }
 
 function showFormMsg(type, msg) {
