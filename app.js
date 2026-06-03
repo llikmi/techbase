@@ -181,8 +181,8 @@ async function loadProducts() {
 function setSyncStatus(state, text) {
   const dot  = document.querySelector('.sync-dot');
   const span = document.getElementById('syncText');
-  dot.className = 'sync-dot' + (state !== 'ok' ? ` ${state}` : '');
-  span.textContent = text;
+  if (dot) dot.className = 'sync-dot' + (state !== 'ok' ? ` ${state}` : '');
+  if (span) span.textContent = text;
 }
 
 // ──────────────────── FUSE SEARCH ────────────────────
@@ -369,8 +369,10 @@ function resetForm() {
   ['fName','fSku','fCategory','fBrand','fQty','fPriceBuy','fPriceSale','fDesc','fSpecs']
     .forEach(id => document.getElementById(id).value = '');
   updateMargin();
-  document.getElementById('formSuccess').classList.add('d-none');
-  document.getElementById('formError').classList.add('d-none');
+  const formSuccess = document.getElementById('formSuccess');
+  const formError = document.getElementById('formError');
+  if (formSuccess) formSuccess.classList.add('d-none');
+  if (formError) formError.classList.add('d-none');
 }
 
 function fillForm(p) {
@@ -389,8 +391,10 @@ function fillForm(p) {
   document.getElementById('fDesc').value      = p.description || '';
   document.getElementById('fSpecs').value     = p.specs || '';
   updateMargin();
-  document.getElementById('formSuccess').classList.add('d-none');
-  document.getElementById('formError').classList.add('d-none');
+  const formSuccess = document.getElementById('formSuccess');
+  const formError = document.getElementById('formError');
+  if (formSuccess) formSuccess.classList.add('d-none');
+  if (formError) formError.classList.add('d-none');
   showView('add');
 }
 
@@ -398,6 +402,7 @@ function updateMargin() {
   const buy  = parseFloat(document.getElementById('fPriceBuy').value)  || 0;
   const sale = parseFloat(document.getElementById('fPriceSale').value) || 0;
   const el = document.getElementById('marginDisplay');
+  if (!el) return;
   if (!buy || !sale) { el.textContent = '—'; el.className = 'margin-display'; return; }
   const pct = Math.round((sale - buy) / buy * 100);
   const rub = sale - buy;
@@ -428,7 +433,7 @@ function getFormProduct() {
 async function saveProduct() {
   const p = getFormProduct();
   if (!p) {
-    showFormMsg('error', 'Заполните обязательные поля: Название, Категория, Цена продажи');
+    alert('Заполните обязательные поля: Название, Категория, Цена продажи');
     return;
   }
 
@@ -453,26 +458,16 @@ async function saveProduct() {
     applyFilters();
     updateStats();
 
-    showFormMsg('success', editingId ? 'Изменения сохранены!' : 'Товар успешно добавлен!');
+    alert(editingId ? '✅ Изменения сохранены!' : '✅ Товар успешно добавлен!');
     resetForm();
 
   } catch(e) {
     console.error(e);
-    showFormMsg('success', 'Успешно сохранено!' + e.message);
+    alert('Ошибка: ' + e.message);
   }
 
   btn.disabled = false;
   btn.innerHTML = '<i class="bi bi-floppy-fill me-2"></i><span>Сохранить товар</span>';
-}
-
-function showFormMsg(type, msg) {
-  document.getElementById('formSuccess').classList.add('d-none');
-  document.getElementById('formError').classList.add('d-none');
-  const el = document.getElementById(type === 'success' ? 'formSuccess' : 'formError');
-  const sp = document.getElementById(type === 'success' ? 'formSuccessText' : 'formErrorText');
-  sp.textContent = msg;
-  el.classList.remove('d-none');
-  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 // ──────────────────── EDIT / DELETE ────────────────────
@@ -534,6 +529,7 @@ function countBy(arr, key) {
 
 function renderBarChart(containerId, data) {
   const el = document.getElementById(containerId);
+  if (!el) return;
   if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">Нет данных</div>'; return; }
   const max = data[0][1];
   el.innerHTML = data.map(([label, val]) => `
@@ -727,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyFilters();
   });
 
-  // ── TABLE SORT (header click) ──
+  // ── TABLE SORT ──
   document.querySelectorAll('.col-sort').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
@@ -785,6 +781,5 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('settingsModal').classList.add('d-none');
   });
 
-  // Init form cancel button hidden
   document.getElementById('cancelEditBtn').style.display = 'none';
 });
