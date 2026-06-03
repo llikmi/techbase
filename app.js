@@ -14,13 +14,13 @@ const PASSWORD_HASH = '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37a
 
 // Google Sheets config (saved in localStorage for convenience)
 let cfg = {
-  apiKey:    localStorage.getItem('tb_apiKey')    || '',
-  sheetId:   localStorage.getItem('tb_sheetId')   || '',
+  apiKey:    localStorage.getItem('tb_apiKey')    || 'AIzaSyCQe4i9h7lFWXKOG6NuMSzjDn4W3qEJ5WQ',
+  sheetId:   localStorage.getItem('tb_sheetId')   || '1n8-L-cd3nVIzmWmVPS86HyBo1tEZVd3UzE8aXFe4dRo',
   sheetName: localStorage.getItem('tb_sheetName') || 'Products',
 };
 
 // Auto-logout after 60 minutes
-const SESSION_TIMEOUT = 60 * 60 * 1000;
+const SESSION_TIMEOUT = 120 * 60 * 1000;
 
 // ──────────────────── STATE ────────────────────
 let allProducts    = [];    // full dataset
