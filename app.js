@@ -12,7 +12,10 @@
 // Generate a new hash: https://emn178.github.io/online-tools/sha256.html
 const PASSWORD_HASH = '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c';
 
-// Google Sheets config (saved in localStorage for convenience)
+// Google Sheets config
+
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPn1hezmQd5uzbaJpQJBhlXdawopW8OCEwdMF9mNUcKGsEiw-o2plvrNe7cZqv0dOCYw/exec'
+
 let cfg = {
   apiKey:    'AIzaSyCQe4i9h7lFWXKOG6NuMSzjDn4W3qEJ5WQ',
   sheetId:   '1n8-L-cd3nVIzmWmVPS86HyBo1tEZVd3UzE8aXFe4dRo',
@@ -119,48 +122,32 @@ async function gsGet() {
 }
 
 async function gsAppend(product) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(cfg.sheetName + '!A:J')}:append?valueInputOption=RAW&key=${cfg.apiKey}`;
   const row = COLS.map(c => product[c] ?? '');
-  const res = await fetch(url, {
+  const res = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ values: [row] }),
+    body: JSON.stringify({ action: 'append', row }),
   });
-  if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Apps Script error');
 }
 
 async function gsUpdate(product) {
-  // Find row index in the sheet
-  const allRows = await gsGetRaw();
-  const rowIdx = allRows.findIndex(r => Number(r[0]) === product.id);
-  if (rowIdx === -1) throw new Error('Строка не найдена в таблице');
-  const sheetRow = rowIdx + 2; // +1 for header, +1 for 0-index
-  const range = `${cfg.sheetName}!A${sheetRow}:J${sheetRow}`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${cfg.apiKey}`;
   const row = COLS.map(c => product[c] ?? '');
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ values: [row] }),
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update', id: product.id, row }),
   });
-  if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Apps Script error');
 }
 
 async function gsDelete(id) {
-  // We'll clear the row content (Google Sheets free tier doesn't support row deletion via simple API key)
-  // Alternative: overwrite with empty, then on load filter empty rows
-  const allRows = await gsGetRaw();
-  const rowIdx = allRows.findIndex(r => Number(r[0]) === id);
-  if (rowIdx === -1) throw new Error('Строка не найдена');
-  const sheetRow = rowIdx + 2;
-  const range = `${cfg.sheetName}!A${sheetRow}:J${sheetRow}`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${cfg.apiKey}`;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ values: [['','','','','','','','','','']] }),
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'delete', id }),
   });
-  if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Apps Script error');
 }
 
 async function gsGetRaw() {
