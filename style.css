@@ -104,7 +104,7 @@ html, body {
   font-size: 12px;
   color: var(--text2);
   margin-top: 3px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
 }
 
 .login-label {
@@ -128,7 +128,7 @@ html, body {
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 18px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   letter-spacing: .15em;
   padding: 14px 48px 14px 16px;
   outline: none;
@@ -257,7 +257,7 @@ html, body {
 
 .session-timer {
   display: flex; align-items: center; gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 12px;
   color: var(--text3);
   padding: 6px 8px;
@@ -317,7 +317,7 @@ html, body {
 .sync-status {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
 }
 
 .sync-dot {
@@ -466,7 +466,7 @@ html, body {
 }
 
 .result-count {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 12px; color: var(--text3);
 }
 
@@ -554,23 +554,23 @@ html, body {
 }
 
 .td-id {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 11px; color: var(--text3);
 }
 
 .td-name { font-weight: 600; }
 .td-sku {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 11px; color: var(--text3);
 }
 
 .td-price {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-weight: 600; color: var(--accent);
 }
 
 .td-buy-price {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 12px; color: var(--text3);
 }
 
@@ -579,7 +579,7 @@ html, body {
   gap: 4px;
   padding: 3px 8px;
   border-radius: 99px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 12px; font-weight: 600;
 }
 .stock-in { background: rgba(34,201,123,.12); color: var(--green); }
@@ -652,7 +652,7 @@ html, body {
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 14px;
   color: var(--text2);
   min-height: 42px;
@@ -712,7 +712,7 @@ html, body {
 .stat-icon.accent-blue { color: var(--accent); }
 
 .stat-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 24px; font-weight: 600;
   line-height: 1; margin-bottom: 6px;
 }
@@ -765,7 +765,7 @@ html, body {
 }
 
 .bar-num {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Syne', sans-serif;
   font-size: 11px; color: var(--text3);
   text-align: right;
 }
