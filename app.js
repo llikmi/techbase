@@ -10,7 +10,7 @@
 // PASSWORD: change the hash below!
 // Default password is: "admin123"
 // Generate a new hash: https://emn178.github.io/online-tools/sha256.html
-const PASSWORD_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
+const PASSWORD_HASH = '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c';
 
 // Google Sheets config (saved in localStorage for convenience)
 let cfg = {
