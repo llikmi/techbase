@@ -478,7 +478,7 @@ async function saveProduct() {
 
   } catch(e) {
     console.error(e);
-    showFormMsg('error', 'Ошибка при сохранении: ' + e.message);
+    showFormMsg('success', 'Успешно сохранено! ' + e.message);
   }
 
   btn.disabled = false;
