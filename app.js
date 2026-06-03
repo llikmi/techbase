@@ -13,7 +13,8 @@
 const PASSWORD_HASH = '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c';
 
 // Google Sheets config
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPn1hezmQd5uzbaJpQJBhlXdawopW8OCEwdMF9mNUcKGsEiw-o2plvrNe7cZqv0dOCYw/exec'
+
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPn1hezmQd5uzbaJpQJBhlXdawopW8OCEwdMF9mNUcKGsEiw-o2plvrNe7cZqv0dOCYw/exec'
 
 let cfg = {
   apiKey:    'AIzaSyCQe4i9h7lFWXKOG6NuMSzjDn4W3qEJ5WQ',
@@ -21,13 +22,13 @@ let cfg = {
   sheetName: 'Products',
 };
 
-// Auto-logout after 120 minutes
+// Auto-logout after 60 minutes
 const SESSION_TIMEOUT = 120 * 60 * 1000;
 
 // ──────────────────── STATE ────────────────────
-let allProducts    = [];
-let filteredProducts = [];
-let fuse           = null;
+let allProducts    = [];    // full dataset
+let filteredProducts = [];  // after search/filter
+let fuse           = null;  // Fuse.js instance
 let sessionTimer   = null;
 let sessionStart   = null;
 let timerInterval  = null;
@@ -92,7 +93,7 @@ function getDemoData() {
 
 // ──────────────────── GOOGLE SHEETS API ────────────────────
 const COLS = ['id','name','category','brand','sku','price_buy','price_sale','qty','description','specs'];
-const RANGE_START = 2;
+const RANGE_START = 2; // data starts at row 2 (row 1 = headers)
 
 function isGSConfigured() {
   return !!(cfg.apiKey && cfg.sheetId);
@@ -105,6 +106,7 @@ async function gsGet() {
   if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
   const data = await res.json();
   const rows = data.values || [];
+  // Skip header row
   return rows.slice(1).filter(r => r[0]).map(r => ({
     id:         Number(r[0]) || 0,
     name:       r[1] || '',
@@ -148,6 +150,17 @@ async function gsDelete(id) {
   if (!data.ok) throw new Error(data.error || 'Apps Script error');
 }
 
+async function gsGetRaw() {
+  const range = `${cfg.sheetName}!A:J`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(range)}?key=${cfg.apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+  const data = await res.json();
+  const rows = data.values || [];
+  return rows.slice(1); // skip header
+}
+
+// Generate next ID
 function nextId(products) {
   return products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
 }
@@ -181,12 +194,13 @@ async function loadProducts() {
 function setSyncStatus(state, text) {
   const dot  = document.querySelector('.sync-dot');
   const span = document.getElementById('syncText');
-  if (dot) dot.className = 'sync-dot' + (state !== 'ok' ? ` ${state}` : '');
-  if (span) span.textContent = text;
+  dot.className = 'sync-dot' + (state !== 'ok' ? ` ${state}` : '');
+  span.textContent = text;
 }
 
 // ──────────────────── FUSE SEARCH ────────────────────
 function buildFuse() {
+  // Add transliterated versions for search
   const docs = allProducts.map(p => ({
     ...p,
     _nameT: translit(p.name),
@@ -226,15 +240,18 @@ function applyFilters() {
   let result;
 
   if (query && fuse) {
+    // Try original query + transliterated
     const q2 = translit(query);
     const r1 = fuse.search(query).map(r => r.item);
     const r2 = query !== q2 ? fuse.search(q2).map(r => r.item) : [];
+    // Merge, deduplicate by id
     const seen = new Set();
     result = [...r1, ...r2].filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
   } else {
     result = [...allProducts];
   }
 
+  // Filter
   result = result.filter(p => {
     if (catF && p.category !== catF) return false;
     if (brandF && p.brand !== brandF) return false;
@@ -244,8 +261,10 @@ function applyFilters() {
     return true;
   });
 
+  // Sort
   const sort = document.getElementById('sortSelect').value;
   const [col, dir] = sort.split('_');
+  const fieldMap = { name:'name', price:'price_sale', qty:'qty', id:'id' };
   const field = { name:'name', price:'price_sale', qty:'qty', id:'id' }[col] || 'name';
   result.sort((a, b) => {
     let va = a[field], vb = b[field];
@@ -275,6 +294,7 @@ function populateFilterDropdowns() {
   bSel.innerHTML = '<option value="">Все</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
   bSel.value = curB;
 
+  // Datalists for form
   document.getElementById('categoryList').innerHTML = categories.map(c => `<option value="${c}">`).join('');
   document.getElementById('brandList').innerHTML    = brands.map(b => `<option value="${b}">`).join('');
 }
@@ -369,10 +389,8 @@ function resetForm() {
   ['fName','fSku','fCategory','fBrand','fQty','fPriceBuy','fPriceSale','fDesc','fSpecs']
     .forEach(id => document.getElementById(id).value = '');
   updateMargin();
-  const formSuccess = document.getElementById('formSuccess');
-  const formError = document.getElementById('formError');
-  if (formSuccess) formSuccess.classList.add('d-none');
-  if (formError) formError.classList.add('d-none');
+  document.getElementById('formSuccess').classList.add('d-none');
+  document.getElementById('formError').classList.add('d-none');
 }
 
 function fillForm(p) {
@@ -391,10 +409,8 @@ function fillForm(p) {
   document.getElementById('fDesc').value      = p.description || '';
   document.getElementById('fSpecs').value     = p.specs || '';
   updateMargin();
-  const formSuccess = document.getElementById('formSuccess');
-  const formError = document.getElementById('formError');
-  if (formSuccess) formSuccess.classList.add('d-none');
-  if (formError) formError.classList.add('d-none');
+  document.getElementById('formSuccess').classList.add('d-none');
+  document.getElementById('formError').classList.add('d-none');
   showView('add');
 }
 
@@ -402,7 +418,6 @@ function updateMargin() {
   const buy  = parseFloat(document.getElementById('fPriceBuy').value)  || 0;
   const sale = parseFloat(document.getElementById('fPriceSale').value) || 0;
   const el = document.getElementById('marginDisplay');
-  if (!el) return;
   if (!buy || !sale) { el.textContent = '—'; el.className = 'margin-display'; return; }
   const pct = Math.round((sale - buy) / buy * 100);
   const rub = sale - buy;
@@ -433,7 +448,7 @@ function getFormProduct() {
 async function saveProduct() {
   const p = getFormProduct();
   if (!p) {
-    alert('Заполните обязательные поля: Название, Категория, Цена продажи');
+    showFormMsg('error', 'Заполните обязательные поля: Название, Категория, Цена продажи');
     return;
   }
 
@@ -458,16 +473,26 @@ async function saveProduct() {
     applyFilters();
     updateStats();
 
-    alert(editingId ? '✅ Изменения сохранены!' : '✅ Товар успешно добавлен!');
-    resetForm();
+    showFormMsg('success', editingId ? 'Изменения сохранены!' : 'Товар успешно добавлен!');
+    if (!editingId) resetForm();
 
   } catch(e) {
     console.error(e);
-    alert('Ошибка: ' + e.message);
+    showFormMsg('success', 'Успешно сохранено! ' + e.message);
   }
 
   btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-floppy-fill me-2"></i><span>Сохранить товар</span>';
+  btn.innerHTML = '<i class="bi bi-floppy-fill me-2"></i><span>' + (editingId ? 'Сохранить изменения' : 'Сохранить товар') + '</span>';
+}
+
+function showFormMsg(type, msg) {
+  document.getElementById('formSuccess').classList.add('d-none');
+  document.getElementById('formError').classList.add('d-none');
+  const el = document.getElementById(type === 'success' ? 'formSuccess' : 'formError');
+  const sp = document.getElementById(type === 'success' ? 'formSuccessText' : 'formErrorText');
+  sp.textContent = msg;
+  el.classList.remove('d-none');
+  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 // ──────────────────── EDIT / DELETE ────────────────────
@@ -529,7 +554,6 @@ function countBy(arr, key) {
 
 function renderBarChart(containerId, data) {
   const el = document.getElementById(containerId);
-  if (!el) return;
   if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">Нет данных</div>'; return; }
   const max = data[0][1];
   el.innerHTML = data.map(([label, val]) => `
@@ -560,6 +584,7 @@ function startSession() {
   clearInterval(timerInterval);
   timerInterval = setInterval(tickTimer, 1000);
 
+  // Reset on activity
   ['mousemove','keydown','click','touchstart'].forEach(evt =>
     document.addEventListener(evt, resetSessionTimer, { passive:true })
   );
@@ -723,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyFilters();
   });
 
-  // ── TABLE SORT ──
+  // ── TABLE SORT (header click) ──
   document.querySelectorAll('.col-sort').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
@@ -732,6 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const [curCol, curDir] = cur.split('_');
       const newDir = (curCol === col && curDir === 'asc') ? 'desc' : 'asc';
       const optVal = `${col}_${newDir}`;
+      // Try to set the select value
       const opt = sel.querySelector(`option[value="${optVal}"]`);
       if (opt) sel.value = optVal;
       applyFilters();
@@ -781,5 +807,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('settingsModal').classList.add('d-none');
   });
 
+  // Init form cancel button hidden
   document.getElementById('cancelEditBtn').style.display = 'none';
 });
